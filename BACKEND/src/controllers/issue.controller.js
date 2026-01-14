@@ -23,3 +23,16 @@ export const createIssue = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
+// Admin Should See “Issues Waiting for Assignment"
+export const getUnassignedIssues = async (req, res) => {
+  try {
+    const issues = await Issue.find({ status: "Pending" }).populate("createdBy", "name email");
+
+    res.json({ issues });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
