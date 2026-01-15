@@ -1,5 +1,3 @@
-You can use the Issue tracking system for you Colleges, Healthcare, customerSupport, ProjectManagement
-
 This Issue Tracking System is adaptable for multiple domains. It can be easily customized and deployed across different sectors that require structured problem reporting, tracking.
 
 ### **1. Colleges & Universities**
