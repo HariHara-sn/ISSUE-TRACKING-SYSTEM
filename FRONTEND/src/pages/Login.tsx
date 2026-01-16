@@ -29,6 +29,7 @@ export default function Login() {
     const success = await login(email, password);
     
     if (!success) {
+      console.log('May be server error, run the backend');
       setError('Invalid email or password');
       setIsLoading(false);
     }

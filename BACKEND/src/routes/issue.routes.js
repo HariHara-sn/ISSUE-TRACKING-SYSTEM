@@ -1,22 +1,28 @@
 import express from "express";
-import { createIssue } from "../controllers/issue.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../middlewares/role.middleware.js";
-import { getUnassignedIssues } from "../controllers/issue.controller.js";
-import { assignIssueToStaff } from "../controllers/issue.controller.js";
-import { stafflist } from "../controllers/issue.controller.js";
-// import User from "../models/user.model.js";
+import { createIssue, stafflist, studentlist, assignIssueToStaff, getUnassignedIssues, getAllIssues } from "../controllers/issue.controller.js";
 const router = express.Router();
+
 
 // ONLY STUDENT CAN CREATE ISSUE
 router.post("/create", protect, authorizeRoles("student"), createIssue);
 
-router.get("/pending", protect, authorizeRoles("admin"), getUnassignedIssues);
+// List All Issues
+router.get("/openIssues", protect, getAllIssues);
+
+// List All Unassigned Issues
+router.get("/pending", protect, getUnassignedIssues);
+
+// List All Resolved Issues
+router.get('/resolved', protect, getResolvedIssues);
 
 router.put("/assign", protect, authorizeRoles("admin"), assignIssueToStaff);
 
 // Get all staff list
 router.get("/staff", protect, authorizeRoles("admin"), stafflist);
 
+// Get all student list
+router.get('/student', protect, authorizeRoles("admin"), studentlist);
 
 export default router;

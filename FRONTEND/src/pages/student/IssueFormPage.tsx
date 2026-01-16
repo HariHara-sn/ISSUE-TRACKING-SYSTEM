@@ -13,8 +13,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { Upload, X, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { issueCategories } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const categoryTitles: Record<string, string> = {
   cleanliness: 'Cleanliness Issue',
@@ -30,14 +32,16 @@ const categoryTitles: Record<string, string> = {
 export default function IssueFormPage() {
   const { category } = useParams<{ category: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const defaultTitle = categoryTitles[category || 'other'] || 'Issue';
   
   const [formData, setFormData] = useState({
     title: defaultTitle,
     description: '',
-    priority: 'low',
+    priority: 'Low',
     image: null as File | null,
     imagePreview: '',
     // Hostel specific
@@ -70,14 +74,96 @@ export default function IssueFormPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadImageToCloudinary = async (file: File) => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary configuration missing");
+    }
+
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", uploadPreset);
+    data.append("cloud_name", cloudName);
+
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: data,
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error?.message || "Image upload failed");
+      
+      return result.secure_url;
+    } catch (error) {
+      console.error("Cloudinary upload error:", error);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowSuccess(true);
+    if (!user) {
+      toast.error("You must be logged in to submit an issue");
+      return;
+    }
+
+    setIsSubmitting(true);
     
-    // Navigate to dashboard after 4 seconds
-    setTimeout(() => {
-      navigate('/student');
-    }, 4000);
+    try {
+      let imageUrl = "";
+      if (formData.image) {
+        imageUrl = await uploadImageToCloudinary(formData.image);
+      }
+
+      // Construct payload
+      const payload = {
+        title: formData.title,
+        category: category || 'other',
+        description: formData.description,
+        location: category === 'hostel' ? `Room: ${formData.roomNo}` : (categoryTitles[category || 'other'] || 'Unknown Location'),
+        priority: formData.priority,
+        image: imageUrl,
+        createdBy: user.id
+      };
+
+      // If specific fields need to be appended to description or handled separately
+      if (category === 'hostel') {
+        payload.description += `\n\nDetails: Room ${formData.roomNo}, Cot ${formData.cotNo}, Food Quality: ${formData.foodQuality}`;
+      } else if (category === 'wifi') {
+         payload.description += `\n\nDetails: Name: ${formData.name}, Email: ${formData.email}, MAC: ${formData.macAddress}, Other: ${formData.otherIssue}`;
+      }
+
+      const response = await fetch('/api/issues/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit issue');
+      }
+
+      setShowSuccess(true);
+      
+      // Navigate to dashboard after 4 seconds
+      setTimeout(() => {
+        navigate('/student');
+      }, 4000);
+
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast.error(error.message || "Failed to submit issue");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (showSuccess) {
@@ -155,6 +241,7 @@ export default function IssueFormPage() {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Enter issue title"
                   className="bg-background"
+                  disabled={isSubmitting}
                 />
                 <p className="text-xs text-muted-foreground">You can edit the title to be more specific</p>
               </div>
@@ -169,6 +256,7 @@ export default function IssueFormPage() {
                   placeholder="Describe the issue in detail..."
                   className="min-h-[120px] bg-background"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -178,14 +266,15 @@ export default function IssueFormPage() {
                 <Select
                   value={formData.priority}
                   onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">Urgent</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">Urgent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -203,6 +292,7 @@ export default function IssueFormPage() {
                         onChange={(e) => setFormData({ ...formData, roomNo: e.target.value })}
                         placeholder="e.g., 305"
                         className="bg-background"
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div className="space-y-2">
@@ -213,6 +303,7 @@ export default function IssueFormPage() {
                         onChange={(e) => setFormData({ ...formData, cotNo: e.target.value })}
                         placeholder="e.g., 2"
                         className="bg-background"
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -221,6 +312,7 @@ export default function IssueFormPage() {
                     <Select
                       value={formData.foodQuality}
                       onValueChange={(value) => setFormData({ ...formData, foodQuality: value })}
+                      disabled={isSubmitting}
                     >
                       <SelectTrigger className="bg-background">
                         <SelectValue placeholder="Select food quality" />
@@ -249,6 +341,7 @@ export default function IssueFormPage() {
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="Enter your name"
                         className="bg-background"
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div className="space-y-2">
@@ -260,6 +353,7 @@ export default function IssueFormPage() {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="your.email@university.edu"
                         className="bg-background"
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -271,6 +365,7 @@ export default function IssueFormPage() {
                       onChange={(e) => setFormData({ ...formData, macAddress: e.target.value })}
                       placeholder="e.g., 00:1A:2B:3C:4D:5E"
                       className="bg-background"
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div className="space-y-2">
@@ -281,6 +376,7 @@ export default function IssueFormPage() {
                       onChange={(e) => setFormData({ ...formData, otherIssue: e.target.value })}
                       placeholder="Any additional WiFi-related issue details..."
                       className="min-h-[80px] bg-background"
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -302,12 +398,13 @@ export default function IssueFormPage() {
                       size="icon"
                       className="absolute -top-2 -right-2 w-6 h-6"
                       onClick={removeImage}
+                      disabled={isSubmitting}
                     >
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <Upload className="w-8 h-8 text-muted-foreground mb-2" />
                       <p className="text-sm text-muted-foreground">
@@ -320,6 +417,7 @@ export default function IssueFormPage() {
                       className="hidden"
                       accept="image/*"
                       onChange={handleImageChange}
+                      disabled={isSubmitting}
                     />
                   </label>
                 )}
@@ -332,11 +430,19 @@ export default function IssueFormPage() {
                   variant="outline"
                   onClick={() => navigate('/student/report')}
                   className="flex-1"
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1">
-                  Submit Complaint
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Complaint'
+                  )}
                 </Button>
               </div>
             </form>

@@ -6,8 +6,8 @@ import { authorizeRoles } from "../middlewares/role.middleware.js";
 const router = express.Router();
 
 // Only Admin can register Staff/Admin
-router.post("/register", protect, authorizeRoles("admin"), registerUser);
-// router.post("/register", registerUser); // remove protect + authorizeRoles temporarily
+// router.post("/register", protect, authorizeRoles("admin"), registerUser);
+router.post("/register", registerUser); // remove protect + authorizeRoles temporarily
 
 router.post("/login", loginUser);
 

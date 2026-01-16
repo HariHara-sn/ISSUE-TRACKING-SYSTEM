@@ -5,13 +5,15 @@ import User from "../models/user.model.js";
 
 export const createIssue = async (req, res) => {
   try {
-    const { title, description, location, priority } = req.body;
+    const { title, description, location, priority, category, image } = req.body;
 
     const issue = await Issue.create({
       title,
       description,
+      category,
       location,
       priority,
+      image,
       createdBy: req.user.id, // student ID from JWT
     });
 
@@ -28,6 +30,20 @@ export const createIssue = async (req, res) => {
   }
 };
 
+export const getAllIssues = async (req, res) => {
+  try {
+    const issues = await Issue.find().populate(
+      "createdBy",
+      "name email"
+    );
+    res.json({ issues });
+    logger.info(`All issues fetched successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 // Admin Should See “Issues Waiting for Assignment"
 export const getUnassignedIssues = async (req, res) => {
   try {
@@ -37,6 +53,7 @@ export const getUnassignedIssues = async (req, res) => {
     );
 
     res.json({ issues });
+    logger.info(`All unassigned issues fetched successfully ✅`);
   } catch (error) {
     logger.error(error);
 
@@ -48,13 +65,23 @@ export const stafflist = async (req, res) => {
   try {
     const staff = await User.find({ role: "staff" }).select("name email");
     res.json({ staff });
+    logger.info(`All staff list fetched successfully ✅`);
 
   } catch (err) {
     logger.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
+export const studentlist = async (req, res ) => {
+  try {
+    const studentlist = await User.find({role : "student"}).select("name email");
+    res.json({studentlist});
+    logger.info(`All student list fetched successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+}
 export const assignIssueToStaff = async (req, res) => {
   try {
     const { issueId, staffId } = req.body;

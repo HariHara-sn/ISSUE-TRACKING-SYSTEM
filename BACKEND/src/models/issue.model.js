@@ -7,12 +7,15 @@ const issueSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+    category: {
+      type: String,
+      required: true,
+    },
     description: {
       type: String,
       required: true,
     },
-
+    
     location: {
       type: String,
       required: true,
@@ -23,7 +26,10 @@ const issueSchema = new mongoose.Schema(
       enum: ["Low", "Medium", "High"],
       default: "Low",
     },
-
+    image: {
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
       enum: ["Pending", "Assigned", "In Progress", "Resolved"],
