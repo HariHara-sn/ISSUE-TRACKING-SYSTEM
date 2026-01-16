@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import OpenIssuesPage from "./pages/student/OpenIssuesPage";
 import ResolvedIssuesPage from "./pages/student/ResolvedIssuesPage";
+import AssignedIssuesPage from "./pages/student/AssignedIssuesPage";
 import TimelinePage from "./pages/student/TimelinePage";
 import ReportIssuePage from "./pages/student/ReportIssuePage";
 import IssueFormPage from "./pages/student/IssueFormPage";
@@ -72,6 +73,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['student']}>
             <OpenIssuesPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/student/assigned" 
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <AssignedIssuesPage />
           </ProtectedRoute>
         } 
       />

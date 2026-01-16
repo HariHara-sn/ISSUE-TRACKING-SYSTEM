@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { IssueCard } from '@/components/shared/IssueCard';
 import { IssueTimeline } from '@/components/shared/IssueTimeline';
-import { mockIssues } from '@/data/mockData';
+// import { mockIssues } from '@/data/mockData';
+import { fetchStudentOpenIssues } from '@/services/issue.service';
+import { useEffect } from 'react';
 import { Issue } from '@/types';
 import {
   Dialog,
@@ -12,10 +14,44 @@ import {
 } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function OpenIssuesPage() {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
-  const openIssues = mockIssues.filter(i => i.status !== 'resolved');
+  const [openIssues, setOpenIssues] = useState<Issue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadIssues = async () => {
+      try {
+        const data = await fetchStudentOpenIssues();
+        setOpenIssues(data);
+      } catch (error) {
+        console.error("Failed to fetch open issues", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadIssues();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-64 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

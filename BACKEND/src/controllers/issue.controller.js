@@ -30,14 +30,60 @@ export const createIssue = async (req, res) => {
   }
 };
 
+// export const getAllIssues = async (req, res) => {
+//   try {
+//     const issues = await Issue.find().populate(
+//       "createdBy",
+//       "name email"
+//     );
+//     res.json({ issues });
+//     logger.info(`All issues fetched successfully ✅`);
+//   } catch (error) {
+//     logger.error(error);
+//     res.status(500).json({ message: "Server Error", error: error.message });
+//   }
+// };
+
+export const getStudentOpenIssues = async (req, res) => {
+  try {
+    const studentId = req.user._id; // from JWT
+
+    const issues = await Issue.find({
+      createdBy: studentId,
+      status: "Pending"
+    });
+
+    res.json({ issues });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
+
 export const getAllIssues = async (req, res) => {
   try {
-    const issues = await Issue.find().populate(
-      "createdBy",
-      "name email"
-    );
+    let filter = {};  // default — admin will see all issues
+
+    if (req.user.role === "student") {
+      // Student: only issues created by them
+      filter = { createdBy: req.user._id };
+    }
+
+    if (req.user.role === "staff") {
+      // Staff: only issues assigned to them
+      filter = { assignedTo: req.user._id };
+    }
+
+    // Admin: filter stays empty → gets all issues
+
+    const issues = await Issue.find(filter)
+      .populate("createdBy", "name email")
+      .populate("assignedTo", "name email");
+
     res.json({ issues });
-    logger.info(`All issues fetched successfully ✅`);
+    
+    logger.info(`Issues fetched for ${req.user.role} successfully ✅`);
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -60,7 +106,82 @@ export const getUnassignedIssues = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+export const getStudentAssignedIssues = async (req, res) => {
+  try {
+    const studentId = req.user._id;
 
+    const issues = await Issue.find({
+      assignedTo: studentId,
+      status: "Assigned"
+    });
+
+    res.json({ issues });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+export const getStaffAssignedIssues = async (req, res) => {
+  try {
+    const staffId = req.user._id;
+
+    const issues = await Issue.find({
+      assignedTo: staffId,
+      status: "Assigned"
+    });
+
+    res.json({ issues });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+export const getResolvedIssues = async (req, res) => {
+  try {
+    const issues = await Issue.find({ status: "Resolved" }).populate(
+      "createdBy",
+      "name email"
+    );
+
+    res.json({ issues });
+    logger.info(`All resolved issues fetched successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+}
+export const getStudentResolvedIssues = async (req, res) => {
+  try {
+    const studentId = req.user._id;
+
+    const issues = await Issue.find({
+      createdBy: studentId,
+      status: "Resolved"
+    });
+
+    res.json({ issues });
+    logger.info(`All particular student resolved issues fetched successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+}
+export const getStaffResolvedIssues = async (req, res) => {
+  try {
+    const staffId = req.user._id;
+
+    const issues = await Issue.find({
+      assignedTo: staffId,
+      status: "Resolved"
+    });
+
+    res.json({ issues });
+    logger.info(`All particular staff resolved issues fetched successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+}
 export const stafflist = async (req, res) => {
   try {
     const staff = await User.find({ role: "staff" }).select("name email");

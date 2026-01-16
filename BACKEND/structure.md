@@ -57,3 +57,14 @@ Staff login:
 }
 
 
+----------------------------------------------------------------------------------------
+i have imlemented every end point for studentpage:
+1. studentDashboard
+
+a. {{baseURL}}/api/issues/student/openIssues - only that particular student pending issue
+b. {{baseURL}}/api/student/assignedIssues - particular student page pending issue end point
+c. {{baseURL}}/api/issues/student/resolved - particular student page resolved issue end point
+
+ - {{baseURL}}/api/issues/openIssues - all like pend,assign,resolved
+ - {{baseURL}}/api/issues/staff/assignedIssues - particular staff assigned issue 
+ - {{baseURL}}/api/issues/pending - only all pending issues

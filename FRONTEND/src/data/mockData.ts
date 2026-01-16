@@ -1,9 +1,9 @@
 import { Issue, Notification, User } from '@/types';
 
 export const mockUsers: User[] = [
-  { id: '1', email: 'student@university.edu', name: 'Alex Johnson', role: 'student' },
-  { id: '2', email: 'staff@university.edu', name: 'Sarah Williams', role: 'staff' },
-  { id: '3', email: 'admin@university.edu', name: 'Michael Chen', role: 'admin' },
+  { id: '1', email: 'student@college.com', name: 'Alex Johnson', role: 'student' },
+  { id: '2', email: 'staff@college.com', name: 'Sarah Williams', role: 'staff' },
+  { id: '3', email: 'admin@college.edu', name: 'Michael Chen', role: 'admin' },
 ];
 
 export const mockIssues: Issue[] = [
