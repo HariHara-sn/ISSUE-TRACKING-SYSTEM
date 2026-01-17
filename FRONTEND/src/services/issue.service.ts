@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { Issue, IssueStatus, IssueCategory, IssuePriority } from '@/types';
+import { Issue, IssueStatus, IssueCategory, IssuePriority, User } from '@/types';
 
 // Helper to transform backend data to frontend Issue type
 const transformIssue = (data: any): Issue => {
@@ -67,4 +67,31 @@ export const fetchStudentAssignedIssues = async (): Promise<Issue[]> => {
 export const fetchStudentResolvedIssues = async (): Promise<Issue[]> => {
   const response = await api.get('/issues/student/resolved');
   return response.data.issues.map(transformIssue);
+};
+
+// Admin Functions
+export const fetchUnassignedIssues = async (): Promise<Issue[]> => {
+  const response = await api.get('/issues/pending');
+  // Backend returns { issues: [...] }
+  return response.data.issues.map(transformIssue);
+};
+
+export const fetchAllAssignedIssues = async (): Promise<Issue[]> => {
+  const response = await api.get('/issues/assigned');
+  return response.data.issues.map(transformIssue);
+};
+
+export const fetchStaffList = async (): Promise<User[]> => {
+  const response = await api.get('/issues/staff');
+  // Backend returns { staff: [...] } where items have name, email, _id
+  return response.data.staff.map((s: any) => ({
+    id: s._id,
+    name: s.name,
+    email: s.email,
+    role: 'staff'
+  }));
+};
+
+export const assignIssue = async (issueId: string, staffId: string): Promise<void> => {
+  await api.put('/issues/assign', { issueId, staffId });
 };

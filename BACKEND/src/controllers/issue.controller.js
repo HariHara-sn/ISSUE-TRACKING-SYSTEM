@@ -30,19 +30,6 @@ export const createIssue = async (req, res) => {
   }
 };
 
-// export const getAllIssues = async (req, res) => {
-//   try {
-//     const issues = await Issue.find().populate(
-//       "createdBy",
-//       "name email"
-//     );
-//     res.json({ issues });
-//     logger.info(`All issues fetched successfully ✅`);
-//   } catch (error) {
-//     logger.error(error);
-//     res.status(500).json({ message: "Server Error", error: error.message });
-//   }
-// };
 
 export const getStudentOpenIssues = async (req, res) => {
   try {
@@ -58,6 +45,16 @@ export const getStudentOpenIssues = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+export const getAllAssignedIssues = async (req, res) => {
+  try {
+    const issues = await Issue.find({ status: "Assigned" }).populate("createdBy","name email").populate("assignedTo", "name email");
+    res.json({ issues });
+    logger.info(`All assigned issues fetched successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+}
 
 
 
@@ -74,8 +71,6 @@ export const getAllIssues = async (req, res) => {
       // Staff: only issues assigned to them
       filter = { assignedTo: req.user._id };
     }
-
-    // Admin: filter stays empty → gets all issues
 
     const issues = await Issue.find(filter)
       .populate("createdBy", "name email")
@@ -109,14 +104,15 @@ export const getUnassignedIssues = async (req, res) => {
 export const getStudentAssignedIssues = async (req, res) => {
   try {
     const studentId = req.user._id;
-
     const issues = await Issue.find({
-      assignedTo: studentId,
+      createdBy: studentId,
       status: "Assigned"
     });
 
     res.json({ issues });
+    logger.info(`All particular student assigned issues fetched successfully ✅`);
   } catch (error) {
+    logger.error(error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -130,7 +126,9 @@ export const getStaffAssignedIssues = async (req, res) => {
     });
 
     res.json({ issues });
+    logger.info(`All particular staff assigned issues fetched successfully ✅`);
   } catch (error) {
+    logger.error(error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

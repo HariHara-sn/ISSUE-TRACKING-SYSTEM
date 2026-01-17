@@ -39,8 +39,8 @@ export default function Login() {
 
   const demoAccounts = [
     { role: 'Student', email: 'student@college.com' },
-    { role: 'Staff', email: 'staff@university.edu' },
-    { role: 'Admin', email: 'admin@university.edu' },
+    { role: 'Staff', email: 'staff@college.com' },
+    { role: 'Admin', email: 'admin@college.com' },
   ];
 
   return (

@@ -9,8 +9,18 @@ import {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
-  Timer
+  Timer,
+  Eye,
+  ImageIcon
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 
 interface IssueCardProps {
@@ -97,6 +107,36 @@ export function IssueCard({ issue, onClick, showAssignee = true }: IssueCardProp
           <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             <User className="h-4 w-4" />
             <span>Assigned to: {issue.assignedStaffName}</span>
+          </div>
+        )}
+        
+        {issue.previewImage && (
+          <div className="mt-4 flex justify-end">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2 text-xs"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  Preview Image
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl" onClick={(e) => e.stopPropagation()}>
+                <DialogHeader>
+                  <DialogTitle>Issue Image Preview</DialogTitle>
+                </DialogHeader>
+                <div className="mt-2 flex items-center justify-center overflow-hidden rounded-lg bg-muted/20 p-2">
+                  <img 
+                    src={issue.previewImage} 
+                    alt={issue.title} 
+                    className="max-h-[80vh] w-full object-contain"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </div>

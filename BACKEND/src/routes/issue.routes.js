@@ -1,9 +1,9 @@
 import express from "express";
 import { protect } from "../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../middlewares/role.middleware.js";
-import { createIssue, stafflist, studentlist, assignIssueToStaff, getUnassignedIssues, getResolvedIssues, getAllIssues } from "../controllers/issue.controller.js";
-import {getStudentOpenIssues , getStudentAssignedIssues, getStaffAssignedIssues} from "../controllers/issue.controller.js";
-import {getStudentResolvedIssues, getStaffResolvedIssues} from "../controllers/issue.controller.js";
+import { createIssue, stafflist, studentlist, assignIssueToStaff, getUnassignedIssues, getAllIssues, getStudentOpenIssues } from "../controllers/issue.controller.js";
+import {getAllAssignedIssues, getStudentAssignedIssues, getStaffAssignedIssues} from "../controllers/issue.controller.js";
+import {getResolvedIssues, getStudentResolvedIssues, getStaffResolvedIssues} from "../controllers/issue.controller.js";
 const router = express.Router();
 
 
@@ -20,6 +20,7 @@ router.get("/student/openIssues", protect, authorizeRoles("student"), getStudent
 // List All Unassigned Issues - need to assign
 router.get("/pending", protect, getUnassignedIssues);
 
+router.get('/assigned',protect, authorizeRoles("admin"), getAllAssignedIssues)
 // List All Assigned Issues based on role
 router.get("/student/assignedIssues", protect, authorizeRoles("student"), getStudentAssignedIssues);
 router.get("/staff/assignedIssues", protect, authorizeRoles("staff"), getStaffAssignedIssues);

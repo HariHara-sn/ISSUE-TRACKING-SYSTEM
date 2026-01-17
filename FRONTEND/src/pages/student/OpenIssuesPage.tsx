@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { IssueCard } from '@/components/shared/IssueCard';
 import { IssueTimeline } from '@/components/shared/IssueTimeline';
-// import { mockIssues } from '@/data/mockData';
-import { fetchStudentOpenIssues } from '@/services/issue.service';
-import { useEffect } from 'react';
+import { fetchStudentOpenIssues, fetchStudentAssignedIssues } from '@/services/issue.service';
 import { Issue } from '@/types';
 import {
   Dialog,
@@ -24,8 +22,12 @@ export default function OpenIssuesPage() {
   useEffect(() => {
     const loadIssues = async () => {
       try {
-        const data = await fetchStudentOpenIssues();
-        setOpenIssues(data);
+        const [pending, assigned] = await Promise.all([
+           fetchStudentOpenIssues(),
+           fetchStudentAssignedIssues()
+        ]);
+        // Combine pending and assigned issues
+        setOpenIssues([...pending, ...assigned]);
       } catch (error) {
         console.error("Failed to fetch open issues", error);
       } finally {

@@ -68,3 +68,7 @@ c. {{baseURL}}/api/issues/student/resolved - particular student page resolved is
  - {{baseURL}}/api/issues/openIssues - all like pend,assign,resolved
  - {{baseURL}}/api/issues/staff/assignedIssues - particular staff assigned issue 
  - {{baseURL}}/api/issues/pending - only all pending issues
+ - {{baseURL}}/api/issues/assigned - only all assigned issues
+ 
+
+ [Hari You dont need a seperate end point for display all issues for student- like pending, assigned, resolved bcoz at end of the day all the issues are get resolved]
