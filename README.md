@@ -55,5 +55,35 @@ Here this system majorily useful for `Escalation` and `Resolution` tracking
 
 - You can see who is handling it, what actions were taken, and when it was resolved.
 
-Demo - 
+``Demo`` - 
 https://drive.google.com/file/d/1DY5FkJc_LWyuo4Y5YZIWg2AM2enK09ta/view?usp=sharing
+
+## Environment Variables
+
+**Backend (.env):**
+- `JWT_SECRET`
+- `PORT`
+- `MONGO_URI`
+
+**Frontend (.env):**
+- `CLOUDINARY_URL`
+- `VITE_CLOUDINARY_CLOUD_NAME`
+- `VITE_CLOUDINARY_UPLOAD_PRESET`
+
+## Install Dependencies and Run
+
+
+**Backend:**
+```bash
+cd BACKEND
+npm install
+npm run dev
+```
+
+**Frontend:**
+```bash
+cd FRONTEND
+npm install
+npm run dev
+```
+
