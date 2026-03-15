@@ -136,7 +136,7 @@ export default function Login() {
                   type="button"
                   onClick={() => {
                     setEmail(account.email);
-                    setPassword('password');
+                    setPassword('student123');
                   }}
                   className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3 text-left transition-colors hover:bg-muted/60"
                 >
