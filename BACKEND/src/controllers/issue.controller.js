@@ -234,3 +234,50 @@ export const assignIssueToStaff = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
+export const getStaffActiveIssues = async (req, res) => {
+  try {
+    const staffId = req.user._id;
+
+    const issues = await Issue.find({
+      assignedTo: staffId,
+      status: "In Progress"
+    }).populate("createdBy", "name email");
+
+    res.json({ issues });
+    logger.info(`All particular staff active issues fetched successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+export const updateIssueStatus = async (req, res) => {
+  try {
+    const { issueId } = req.params;
+    const { status } = req.body;
+
+    if (!["Pending", "Assigned", "In Progress", "Resolved"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const issue = await Issue.findByIdAndUpdate(
+      issueId,
+      { status },
+      { new: true }
+    ).populate("assignedTo", "name email role").populate("createdBy", "name email");
+
+    if (!issue) {
+      return res.status(404).json({ message: "Issue not found" });
+    }
+
+    res.json({
+      message: "Issue status updated successfully",
+      issue
+    });
+    logger.info(`Issue status updated successfully ✅`);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};

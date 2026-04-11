@@ -19,6 +19,8 @@ import {
   getResolvedIssues,
   getStudentResolvedIssues,
   getStaffResolvedIssues,
+  getStaffActiveIssues,
+  updateIssueStatus,
 } from "../controllers/issue.controller.js";
 const router = express.Router();
 
@@ -70,6 +72,17 @@ router.get(
 );
 
 router.put("/assign", protect, authorizeRoles("admin"), assignIssueToStaff);
+
+// Update Issue Status (Staff or Admin)
+router.put("/:issueId/status", protect, authorizeRoles("staff", "admin"), updateIssueStatus);
+
+// List Staff Active Issues (In Progress)
+router.get(
+  "/staff/active",
+  protect,
+  authorizeRoles("staff"),
+  getStaffActiveIssues
+);
 
 // Get all staff list
 router.get("/staff", protect, authorizeRoles("admin"), stafflist);

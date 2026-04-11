@@ -125,7 +125,7 @@ export default function Login() {
           </form>
 
           {/* Demo Accounts */}
-          <div className="mt-8 border-t border-border pt-6">
+          {/* <div className="mt-8 border-t border-border pt-6">
             <p className="mb-4 text-center text-sm text-muted-foreground">
               Demo Accounts (password: <code className="rounded bg-muted px-1.5 py-0.5">password</code>)
             </p>
@@ -144,8 +144,8 @@ export default function Login() {
                   <span className="text-sm text-muted-foreground">{account.email}</span>
                 </button>
               ))}
-            </div>
-          </div>
+            </div> */
+          /* </div> */}
         </Card>
       </div>
     </div>

@@ -1,9 +1,9 @@
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockIssues } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { 
@@ -14,15 +14,9 @@ import {
   Users,
   Clock,
   ArrowRight,
-  UserPlus
+  UserPlus,
+  Loader2
 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   BarChart,
   Bar,
@@ -35,14 +29,8 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-
-const categoryData = [
-  { name: 'Lab', value: 35, color: 'hsl(162, 100%, 36%)' },
-  { name: 'Classroom', value: 28, color: 'hsl(199, 89%, 48%)' },
-  { name: 'Hostel', value: 20, color: 'hsl(38, 92%, 50%)' },
-  { name: 'Library', value: 12, color: 'hsl(280, 65%, 60%)' },
-  { name: 'Other', value: 5, color: 'hsl(210, 30%, 60%)' },
-];
+import { fetchAllIssues } from '@/services/issue.service';
+import { Issue } from '@/types';
 
 const monthlyData = [
   { month: 'Sep', issues: 45, resolved: 42 },
@@ -54,17 +42,58 @@ const monthlyData = [
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  
-  const totalIssues = mockIssues.length;
-  const openIssues = mockIssues.filter(i => i.status !== 'resolved').length;
-  const resolvedIssues = mockIssues.filter(i => i.status === 'resolved').length;
-  const pendingAssignment = mockIssues.filter(i => i.status === 'submitted').length;
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const staffMembers = [
-    { id: '1', name: 'Sarah Williams' },
-    { id: '2', name: 'John Martinez' },
-    { id: '3', name: 'Emily Chen' },
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const allIssues = await fetchAllIssues();
+        setIssues(allIssues || []);
+      } catch (error) {
+        console.error("Failed to fetch admin issues", error);
+        setIssues([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const totalIssues = issues.length;
+  const openIssues = issues.filter(i => i.status !== 'resolved').length;
+  const resolvedIssues = issues.filter(i => i.status === 'resolved').length;
+  const pendingAssignment = issues.filter(i => i.status === 'submitted').length;
+
+  const categoryCounts = issues.reduce((acc, issue) => {
+    acc[issue.category] = (acc[issue.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const colorMap: Record<string, string> = {
+    'lab': 'hsl(162, 100%, 36%)',
+    'classroom': 'hsl(199, 89%, 48%)',
+    'hostel': 'hsl(38, 92%, 50%)',
+    'library': 'hsl(280, 65%, 60%)',
+    'other': 'hsl(210, 30%, 60%)',
+    'cafeteria': 'hsl(15, 80%, 50%)'
+  };
+
+  const categoryData = Object.keys(categoryCounts).map(cat => ({
+    name: cat.charAt(0).toUpperCase() + cat.slice(1),
+    value: Math.round((categoryCounts[cat] / (totalIssues || 1)) * 100),
+    color: colorMap[cat] || colorMap['other']
+  }));
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-[80vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -91,14 +120,12 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-
         {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title="Total Issues"
             value={totalIssues}
             icon={BarChart3}
-            trend={{ value: 12, isPositive: true }}
           />
           <StatsCard
             title="Open Issues"
@@ -111,7 +138,6 @@ export default function AdminDashboard() {
             value={resolvedIssues}
             icon={CheckCircle}
             iconClassName="bg-success/10 text-success"
-            trend={{ value: 8, isPositive: true }}
           />
           <StatsCard
             title="Pending Assignment"
@@ -173,7 +199,7 @@ export default function AdminDashboard() {
           <Card className="p-6">
             <h3 className="mb-6 font-semibold text-foreground">Issues by Category</h3>
             <div className="flex items-center gap-6">
-              <div className="h-48 w-48">
+              <div className="h-48 w-48 shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -186,21 +212,23 @@ export default function AdminDashboard() {
                       dataKey="value"
                     >
                       {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="flex-1 space-y-3">
-                {categoryData.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                {categoryData.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No data available.</p>
+                ) : categoryData.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between gap-2 overflow-hidden">
+                    <div className="flex items-center gap-2 truncate">
                       <div 
-                        className="h-3 w-3 rounded-full" 
+                        className="h-3 w-3 shrink-0 rounded-full" 
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-sm text-muted-foreground">{item.name}</span>
+                      <span className="text-sm text-muted-foreground truncate" title={item.name}>{item.name}</span>
                     </div>
                     <span className="text-sm font-medium text-foreground">{item.value}%</span>
                   </div>
@@ -217,9 +245,11 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-semibold text-foreground">Issues Needing Assignment</h2>
               <Badge className="bg-warning/10 text-warning">{pendingAssignment}</Badge>
             </div>
-            <Button variant="ghost" size="sm" className="text-primary">
-              View All <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
+            <Link to="/admin/assign">
+              <Button variant="ghost" size="sm" className="text-primary">
+                View All & Assign <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
@@ -235,7 +265,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {mockIssues.filter(i => i.status === 'submitted').map((issue) => (
+                  {issues.filter(i => i.status === 'submitted').slice(0, 5).map((issue) => (
                     <tr key={issue.id} className="hover:bg-muted/20 transition-colors">
                       <td className="px-6 py-4">
                         <div>
@@ -261,21 +291,22 @@ export default function AdminDashboard() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4">
-                        <Select>
-                          <SelectTrigger className="w-40">
-                            <SelectValue placeholder="Select staff" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {staffMembers.map((staff) => (
-                              <SelectItem key={staff.id} value={staff.id}>
-                                {staff.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Link to="/admin/assign">
+                          <Button variant="outline" size="sm">
+                            Assign User
+                          </Button>
+                        </Link>
                       </td>
                     </tr>
                   ))}
+                  {issues.filter(i => i.status === 'submitted').length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                        <CheckCircle className="mx-auto h-8 w-8 text-success mb-2 opacity-50" />
+                        No issues pending assignment!
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -1,13 +1,39 @@
+import { useState, useEffect } from 'react';
 import { StaffDashboardLayout } from '@/components/layout/StaffDashboardLayout';
 import { IssueCard } from '@/components/shared/IssueCard';
-import { mockIssues } from '@/data/mockData';
+import { fetchStaffResolvedIssues } from '@/services/issue.service';
+import { Issue } from '@/types';
 import { Card } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 export default function CompletedIssuesPage() {
-  const completedIssues = mockIssues.filter(i => 
-    i.assignedStaffId === '2' && i.status === 'resolved'
-  );
+  const [completedIssues, setCompletedIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    try {
+      const issues = await fetchStaffResolvedIssues();
+      setCompletedIssues(issues);
+    } catch (error) {
+      console.error("Failed to load staff resolved issues", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <StaffDashboardLayout>
+        <div className="flex h-[80vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </StaffDashboardLayout>
+    );
+  }
 
   return (
     <StaffDashboardLayout>

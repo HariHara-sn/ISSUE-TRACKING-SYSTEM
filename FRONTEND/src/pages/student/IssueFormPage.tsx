@@ -17,6 +17,7 @@ import { Upload, X, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { issueCategories } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { createIssue } from '@/services/issue.service';
 
 const categoryTitles: Record<string, string> = {
   cleanliness: 'Cleanliness Issue',
@@ -136,19 +137,10 @@ export default function IssueFormPage() {
          payload.description += `\n\nDetails: Name: ${formData.name}, Email: ${formData.email}, MAC: ${formData.macAddress}, Other: ${formData.otherIssue}`;
       }
 
-      const response = await fetch('/api/issues/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit issue');
+      const issueInfo = await createIssue(payload);
+      
+      if (!issueInfo) {
+        throw new Error('Failed to submit issue');
       }
 
       setShowSuccess(true);

@@ -15,6 +15,7 @@ import {
 import { ArrowLeft, UserPlus, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import api from '@/lib/api';
 
 const departments = [
   'CSE', 'IT', 'ECE', 'MECH', 'CIVIL', 'MBA', 'MCA'
@@ -49,34 +50,60 @@ export default function ManageUsersPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleStaffSubmit = (e: React.FormEvent) => {
+  const handleStaffSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await api.post('/auth/register', {
+        name: staffForm.name,
+        email: staffForm.email,
+        password: staffForm.password,
+        role: 'staff'
+      });
+
       toast({
         title: "Staff Registered Successfully!",
         description: `${staffForm.name} has been added to the system.`,
       });
       setStaffForm({ name: '', email: '', phone: '', department: '', password: '' });
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.response?.data?.message || error.message || "Failed to register staff",
+        variant: "destructive"
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
-  const handleStudentSubmit = (e: React.FormEvent) => {
+  const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await api.post('/auth/register', {
+        name: studentForm.name,
+        email: studentForm.email,
+        password: studentForm.password,
+        role: 'student'
+      });
+
       toast({
         title: "Student Registered Successfully!",
         description: `${studentForm.name} has been added to the system.`,
       });
       setStudentForm({ name: '', email: '', phone: '', department: '', rollNumber: '', password: '' });
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.response?.data?.message || error.message || "Failed to register student",
+        variant: "destructive"
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (

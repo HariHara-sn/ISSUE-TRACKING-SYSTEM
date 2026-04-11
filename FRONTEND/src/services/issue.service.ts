@@ -69,10 +69,19 @@ export const fetchStudentResolvedIssues = async (): Promise<Issue[]> => {
   return response.data.issues.map(transformIssue);
 };
 
+export const createIssue = async (payload: any): Promise<Issue> => {
+  const response = await api.post('/issues/create', payload);
+  return transformIssue(response.data.issue);
+};
+
 // Admin Functions
+export const fetchAllIssues = async (): Promise<Issue[]> => {
+  const response = await api.get('/issues/openIssues');
+  return response.data.issues.map(transformIssue);
+};
+
 export const fetchUnassignedIssues = async (): Promise<Issue[]> => {
   const response = await api.get('/issues/pending');
-  // Backend returns { issues: [...] }
   return response.data.issues.map(transformIssue);
 };
 
@@ -81,9 +90,29 @@ export const fetchAllAssignedIssues = async (): Promise<Issue[]> => {
   return response.data.issues.map(transformIssue);
 };
 
+export const fetchAllResolvedIssues = async (): Promise<Issue[]> => {
+  const response = await api.get('/issues/resolved');
+  return response.data.issues.map(transformIssue);
+};
+
+// Staff Functions
+export const fetchStaffAssignedIssues = async (): Promise<Issue[]> => {
+  const response = await api.get('/issues/staff/assignedIssues');
+  return response.data.issues.map(transformIssue);
+};
+
+export const fetchStaffActiveIssues = async (): Promise<Issue[]> => {
+  const response = await api.get('/issues/staff/active');
+  return response.data.issues.map(transformIssue);
+};
+
+export const fetchStaffResolvedIssues = async (): Promise<Issue[]> => {
+  const response = await api.get('/issues/staff/resolved');
+  return response.data.issues.map(transformIssue);
+};
+
 export const fetchStaffList = async (): Promise<User[]> => {
   const response = await api.get('/issues/staff');
-  // Backend returns { staff: [...] } where items have name, email, _id
   return response.data.staff.map((s: any) => ({
     id: s._id,
     name: s.name,
@@ -92,6 +121,28 @@ export const fetchStaffList = async (): Promise<User[]> => {
   }));
 };
 
+export const fetchStudentList = async (): Promise<User[]> => {
+  const response = await api.get('/issues/student');
+  return response.data.studentlist.map((s: any) => ({
+    id: s._id,
+    name: s.name,
+    email: s.email,
+    role: 'student'
+  }));
+};
+
+// Utility Functions
 export const assignIssue = async (issueId: string, staffId: string): Promise<void> => {
   await api.put('/issues/assign', { issueId, staffId });
+};
+
+export const updateIssueStatus = async (issueId: string, status: string): Promise<void> => {
+  // Mapping frontend status correctly to backend
+  const statusMap: Record<string, string> = {
+    'submitted': 'Pending',
+    'assigned': 'Assigned',
+    'in_progress': 'In Progress',
+    'resolved': 'Resolved'
+  };
+  await api.put(`/issues/${issueId}/status`, { status: statusMap[status] || status });
 };
